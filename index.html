@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Tracking and Calendar</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* CSS for the rounded square */
+        .left-rounded-square,
+        .right-rounded-square {
+            width: 80%;
+            height: 300px;
+            background-color: white;
+            border-radius: 20px;
+            margin: 0 10px 20px;
+            padding: 20px;
+            box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            text-align: center;
+        }
+
+        .square-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        /* Media query for screens wider than 768px (PC) */
+        @media screen and (min-width: 769px) {
+            .left-rounded-square,
+            .right-rounded-square {
+                width: 50%;
+            }
+        }
+
+        /* Dropdown container */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        /* Dropdown button style */
+        .dropdown-button {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Dropdown content (hidden by default) */
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+
+        /* Dropdown links */
+        .dropdown-content a {
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        /* Show the dropdown content when hovering over the button */
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        /* Position "Hae" and "Raportti" dropdowns to the left */
+        .dropdown-hae .dropdown-content {
+            left: -40px;
+        }
+
+        .dropdown-raportti .dropdown-content {
+            left: -70px;
+        }
+
+        /* Date range input style */
+        .date-range-input {
+            display: none;
+            margin-top: 10px;
+        }
+
+        /* Generate report button style */
+        .generate-report {
+            margin-top: 10px;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.2);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        .add-marking-button {
+            background-color: #008CBA;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .marking {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Page content begins here -->
+
+    <!-- Top section with buttons and menus -->
+    <div class="container">
+        <div class="top-left">
+            <!-- Dropdown button for "Lisää" -->
+            <div class="dropdown">
+                <button class="dropdown-button">Lisää</button>
+                <!-- Dropdown content for "Lisää" -->
+                <div class="dropdown-content">
+                    <a href="#" class="työtuntimerkintä">Työtuntimerkintä</a>
+                    <a href="#" class="kalenterimerkintä">Kalenterimerkintä</a>
+                    <a href="#" class="kommentti">Kommentti</a>
+                </div>
+            </div>
+        </div>
+        <div class="top-right">
+            <!-- Dropdown button for "Hae" -->
+            <div class="dropdown dropdown-hae">
+                <button class="dropdown-button">Hae</button>
+                <!-- Dropdown content for "Hae" -->
+                <div class="dropdown-content">
+                    <a href="#" class="hae-paivamaaralla">Hae päivämäärällä</a>
+                    <a href="#" class="hae-kommentin-perusteella">Hae kommentin perusteella</a>
+                    <a href="#" class="hae-aikavaltta">Hae aikaväliltä</a>
+                </div>
+            </div>
+            <!-- Dropdown button for "Raportti" -->
+            <div class="dropdown dropdown-raportti">
+                <button class="dropdown-button">Raportti</button>
+                <!-- Dropdown content for "Raportti" -->
+                <div class="dropdown-content">
+                    <a href="#" class="raportti-ajalta">Raportti ajalta</a>
+                    <!-- Date range input -->
+                    <div class="date-range-input">
+                        <label for="start-date">Start Date:</label>
+                        <input type="date" id="start-date">
+                        <br>
+                        <label for="end-date">End Date:</label>
+                        <input type="date" id="end-date">
+                        <br>
+                        <button class="generate-report">Generate Report</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Left rounded square for displaying work hour markings -->
+    <div class="left-rounded-square">
+        <div class="square-title">Työtuntimerkinnät</div>
+        <div class="markings work-hour-markings">
+            <!-- Work hour markings will be displayed here -->
+        </div>
+    </div>
+
+    <!-- Right rounded square for displaying kalenterimerkintä markings -->
+    <div class="right-rounded-square">
+        <div class="square-title">Kalenterimerkinnät</div>
+        <div class="markings kalenterimerkinta-markings">
+            <!-- Kalenterimerkintä markings will be displayed here -->
+        </div>
+    </div>
+
+    <!-- Modal for adding work hour markings -->
+    <div id="work-hour-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeWorkHourModal()">&times;</span>
+            <h2>Add Work Hour Marking</h2>
+            <form id="work-hour-form">
+                <label for="work-hour-date">Date:</label>
+                <input type="date" id="work-hour-date" required>
+                <br>
+                <label for="work-hour-start-time">Start Time:</label>
+                <input type="time" id="work-hour-start-time" required>
+                <br>
+                <label for="work-hour-stop-time">Stop Time:</label>
+                <input type="time" id="work-hour-stop-time" required>
+                <br>
+                <label for="work-hour-comment">Comment:</label>
+                <input type="text" id="work-hour-comment">
+                <br>
+                <button type="button" class="add-marking-button" id="add-work-hour-marking-button">Add Marking</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for adding kalenterimerkintä markings -->
+    <div id="kalenterimerkinta-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeKalenterimerkintaModal()">&times;</span>
+            <h2>Add Kalenterimerkintä</h2>
+            <form id="kalenterimerkinta-form">
+                <label for="kalenterimerkinta-date">Date:</label>
+                <input type="date" id="kalenterimerkinta-date" required>
+                <br>
+                <label for="kalenterimerkinta-comment">Comment:</label>
+                <input type="text" id="kalenterimerkinta-comment">
+                <br>
+                <button type="button" class="add-marking-button" onclick="addKalenterimerkintaMarking()">Add Marking</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript code for functionality -->
+    <script>
+        // Store markings in arrays for work hour and kalenterimerkintä markings
+        const workHourMarkings = [];
+        const kalenterimerkintaMarkings = [];
+
+        // Function to add a new marking
+        function addMarking(type, date, startTime, stopTime, comment) {
+            // Auto-fill dots in the date format (dd.mm.yyyy)
+            date = autoFillDotsInDate(date);
+        
+            const startStopTimeString = `${startTime} - ${stopTime}`;
+            const workHours = calculateWorkHours(startTime, stopTime);
+        
+            const marking = `${date}, ${startStopTimeString}, ${workHours}h${comment ? `, ${comment}` : ''} (${type})`;
+        
+            if (type === 'Työtuntimerkintä') {
+                workHourMarkings.push(marking);
+            } else if (type === 'Kalenterimerkintä') {
+                kalenterimerkintaMarkings.push(`${date}, ${comment ? `, ${comment}` : ''} (${type})`);
+            }
+        
+            displayMarkings();
+        }
+
+        // Function to display markings in the UI
+        function displayMarkings() {
+            const workHourMarkingsContainer = document.querySelector('.work-hour-markings');
+            const kalenterimerkintaMarkingsContainer = document.querySelector('.kalenterimerkinta-markings');
+
+            workHourMarkingsContainer.innerHTML = '';
+            kalenterimerkintaMarkingsContainer.innerHTML = '';
+
+            // Convert sorted Date objects back to date strings for display
+            workHourMarkings.forEach((marking, index) => {
+                const markingElement = document.createElement('div');
+                markingElement.classList.add('marking');
+                markingElement.innerHTML = `${marking} <span class="delete-icon" onclick="confirmDeleteWorkHour(${index})">🗑️</span>`;
+                workHourMarkingsContainer.appendChild(markingElement);
+            });
+
+            kalenterimerkintaMarkings.forEach((marking, index) => {
+                const markingElement = document.createElement('div');
+                markingElement.classList.add('marking');
+                markingElement.innerHTML = `${marking} <span class="delete-icon" onclick="confirmDeleteKalenterimerkinta(${index})">🗑️</span>`;
+                kalenterimerkintaMarkingsContainer.appendChild(markingElement);
+            });
+        }
+
+        // Function to calculate work hours between start and stop times
+        function calculateWorkHours(startTime, stopTime) {
+            // Parse start and stop times as HH:mm
+            const [startHours, startMinutes] = startTime.split(':').map(Number);
+            const [stopHours, stopMinutes] = stopTime.split(':').map(Number);
+        
+            // Calculate total minutes worked
+            const totalMinutes = (stopHours - startHours) * 60 + (stopMinutes - startMinutes);
+        
+            // Calculate hours and minutes from total minutes
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+        
+            // Format as HH:mm
+            return `${hours}:${minutes < 10 ? '0' : ''}${minutes}`;
+        }
+
+        // Function to confirm and delete a work hour marking
+        function confirmDeleteWorkHour(index) {
+            const confirmation = confirm('Are you sure you want to remove this work hour marking?');
+            if (confirmation) {
+                deleteWorkHourMarking(index);
+            }
+        }
+
+        // Function to confirm and delete a kalenterimerkintä marking
+        function confirmDeleteKalenterimerkinta(index) {
+            const confirmation = confirm('Are you sure you want to remove this kalenterimerkintä marking?');
+            if (confirmation) {
+                deleteKalenterimerkintaMarking(index);
+            }
+        }
+
+        // Function to delete a work hour marking
+        function deleteWorkHourMarking(index) {
+            workHourMarkings.splice(index, 1);
+            displayMarkings();
+        }
+
+        // Function to delete a kalenterimerkintä marking
+        function deleteKalenterimerkintaMarking(index) {
+            kalenterimerkintaMarkings.splice(index, 1);
+            displayMarkings();
+        }
+
+        // Event listener for the dropdown buttons to show/hide the dropdown content
+        const dropdownButtons = document.querySelectorAll('.dropdown-button');
+        const dropdownContents = document.querySelectorAll('.dropdown-content');
+
+        dropdownButtons.forEach((button, index) => {
+            button.addEventListener('click', () => {
+                dropdownContents[index].classList.toggle('hidden');
+            });
+        });
+
+        // Event listeners for dropdown menu items
+        document.querySelector('.työtuntimerkintä').addEventListener('click', () => {
+            // Open the work hour modal
+            document.getElementById('work-hour-modal').style.display = 'block';
+        });
+
+        document.querySelector('.kalenterimerkintä').addEventListener('click', () => {
+            // Open the Kalenterimerkintä modal
+            document.getElementById('kalenterimerkinta-modal').style.display = 'block';
+        });
+
+        document.querySelector('.kommentti').addEventListener('click', () => {
+            const comment = prompt('Enter comment:');
+            if (comment) {
+                addMarking('Kommentti', '', '', '', comment);
+                hideDropdowns();
+            }
+        });
+
+        // Event listener for "Raportti ajalta" menu item
+        document.querySelector('.raportti-ajalta').addEventListener('click', () => {
+            // Show the date range input
+            const dateRangeInput = document.querySelector('.date-range-input');
+            dateRangeInput.style.display = 'block';
+
+            // Add an event listener to the "Generate Report" button
+            const generateReportButton = document.querySelector('.generate-report');
+            generateReportButton.addEventListener('click', () => {
+                const startDate = document.getElementById('start-date').value;
+                const endDate = document.getElementById('end-date').value;
+                generateReport(startDate, endDate);
+            });
+        });
+
+        // Function to generate a PDF report
+        function generateReport(startDate, endDate) {
+            const doc = new jsPDF();
+            doc.setFontSize(18);
+            doc.text('Time Tracking Report', 20, 20);
+            doc.setFontSize(12);
+            doc.text(`From: ${startDate}`, 20, 30);
+            doc.text(`To: ${endDate}`, 20, 40);
+
+            const startY = 50;
+
+            // Add work hour markings to the report
+            doc.setFontSize(14);
+            doc.text('Work Hour Markings', 20, startY);
+            doc.setFontSize(12);
+            let currentY = startY + 10;
+
+            workHourMarkings.forEach((marking) => {
+                doc.text(marking, 20, currentY);
+                currentY += 10;
+            });
+
+            // Add kalenterimerkintä markings to the report
+            doc.setFontSize(14);
+            doc.text('Kalenterimerkintä Markings', 20, currentY);
+            doc.setFontSize(12);
+            currentY += 10;
+
+            kalenterimerkintaMarkings.forEach((marking) => {
+                doc.text(marking, 20, currentY);
+                currentY += 10;
+            });
+
+            // Save the PDF with a unique filename
+            const filename = `Time_Tracking_Report_${startDate}_${endDate}.pdf`;
+            doc.save(filename);
+
+            // Hide the date range input after generating the report
+            const dateRangeInput = document.querySelector('.date-range-input');
+            dateRangeInput.style.display = 'none';
+        }
+
+        // Function to auto-fill dots in the date format (dd.mm.yyyy)
+        function autoFillDotsInDate(date) {
+            return date.replace(/\./g, '/');
+        }
+
+        // Function to hide all dropdown contents
+        function hideDropdowns() {
+            dropdownContents.forEach((content) => {
+                content.classList.add('hidden');
+            });
+        }
+
+        // Function to close the work hour modal
+        function closeWorkHourModal() {
+            document.getElementById('work-hour-modal').style.display = 'none';
+        }
+
+        // Function to close the Kalenterimerkintä modal
+        function closeKalenterimerkintaModal() {
+            document.getElementById('kalenterimerkinta-modal').style.display = 'none';
+        }
+
+        // Function to add Kalenterimerkintä marking
+        function addKalenterimerkintaMarking() {
+            const date = document.getElementById('kalenterimerkinta-date').value;
+            const comment = document.getElementById('kalenterimerkinta-comment').value;
+
+            addMarking('Kalenterimerkintä', date, '', '', comment);
+            closeKalenterimerkintaModal();
+        }
+
+        // Event listener for the "Add Marking" button in the work hour modal
+        document.getElementById('add-work-hour-marking-button').addEventListener('click', () => {
+            const date = document.getElementById('work-hour-date').value;
+            const startTime = document.getElementById('work-hour-start-time').value;
+            const stopTime = document.getElementById('work-hour-stop-time').value;
+            const comment = document.getElementById('work-hour-comment').value;
+        
+            addMarking('Työtuntimerkintä', date, startTime, stopTime, comment);
+            closeWorkHourModal();
+        });
+
+
+        // Initial display of markings
+        displayMarkings();
+    </script>
+</body>
+</html>

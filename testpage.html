@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Markings</title>
+    <style>
+        /* CSS for the rounded square */
+        .markings-container {
+            width: 80%;
+            height: 300px;
+            background-color: white;
+            border-radius: 20px;
+            margin: 20px auto;
+            padding: 20px;
+            box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            text-align: center;
+        }
+
+        .square-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .marking {
+            margin: 5px 0;
+        }
+
+        /* Input and button styles */
+        input[type="text"], input[type="time"] {
+            width: 100%;
+            padding: 5px;
+            margin: 5px 0;
+        }
+
+        /* Generate marking button style */
+        .add-marking-button {
+            padding: 5px 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Markings container -->
+    <div class="markings-container">
+        <div class="square-title">Test Markings</div>
+        <div class="markings" id="markings">
+            <!-- Test markings will be displayed here -->
+        </div>
+        <!-- Form for adding test markings -->
+        <form id="marking-form">
+            <label for="marking-type">Type:</label>
+            <select id="marking-type">
+                <option value="Työtuntimerkintä">Työtuntimerkintä</option>
+                <option value="Kalenterimerkintä">Kalenterimerkintä</option>
+                <option value="Kommentti">Kommentti</option>
+            </select>
+            <br>
+            <label for="marking-date">Date:</label>
+            <input type="date" id="marking-date" required>
+            <br>
+            <label for="marking-start-time">Start Time:</label>
+            <input type="time" id="marking-start-time" required>
+            <br>
+            <label for="marking-stop-time">Stop Time:</label>
+            <input type="time" id="marking-stop-time" required>
+            <br>
+            <label for="marking-comment">Comment:</label>
+            <input type="text" id="marking-comment">
+            <br>
+            <button type="button" class="add-marking-button" onclick="addTestMarking()">Add Marking</button>
+        </form>
+    </div>
+
+    <!-- JavaScript code for functionality -->
+    <script>
+        // Function to add a test marking
+        function addTestMarking() {
+            const type = document.getElementById('marking-type').value;
+            const date = document.getElementById('marking-date').value;
+            const startTime = document.getElementById('marking-start-time').value;
+            const stopTime = document.getElementById('marking-stop-time').value;
+            const comment = document.getElementById('marking-comment').value;
+
+            const startStopTimeString = `${startTime} - ${stopTime}`;
+            const workHours = calculateWorkHours(startTime, stopTime);
+
+            const marking = `${date}, ${startStopTimeString}, ${workHours}, ${comment ? `, ${comment}` : ''} (${type})`;
+
+            // Display the test marking
+            const markingsContainer = document.getElementById('markings');
+            const markingElement = document.createElement('div');
+            markingElement.classList.add('marking');
+            markingElement.textContent = marking;
+            markingsContainer.appendChild(markingElement);
+
+            // Clear the form fields
+            document.getElementById('marking-type').selectedIndex = 0;
+            document.getElementById('marking-date').value = '';
+            document.getElementById('marking-start-time').value = '';
+            document.getElementById('marking-stop-time').value = '';
+            document.getElementById('marking-comment').value = '';
+        }
+
+        // Function to calculate work hours between start and stop times
+        function calculateWorkHours(startTime, stopTime) {
+            // Parse start and stop times as HH:mm
+            const [startHours, startMinutes] = startTime.split(':').map(Number);
+            const [stopHours, stopMinutes] = stopTime.split(':').map(Number);
+        
+            // Calculate work hours
+            let hours = stopHours - startHours;
+            let minutes = stopMinutes - startMinutes;
+        
+            // Handle cases where minutes go negative
+            if (minutes < 0) {
+                hours -= 1;
+                minutes += 60;
+            }
+        
+            // Format as HH:mm
+            return `${hours}:${minutes < 10 ? '0' : ''}${minutes}`;
+        }
+    </script>
+</body>
+</html>
